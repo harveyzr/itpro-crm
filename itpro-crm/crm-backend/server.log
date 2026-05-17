@@ -1,0 +1,6 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+
+🚀 ITPro CRM running at http://localhost:3000
+📡 Public ticket API: POST http://localhost:3000/api/tickets/public/submit
+📖 API docs: http://localhost:3000/api/docs/public-ticket
+

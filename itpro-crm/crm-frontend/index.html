@@ -1,0 +1,1537 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>ITPro CRM</title>
+<style>
+/* ===== RESET & BASE ===== */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --primary: #0a74da; --primary-dark: #0558a8; --primary-light: #e8f2fd;
+  --accent: #00c2a8; --accent-dark: #009e88;
+  --danger: #e53e3e; --danger-light: #fff5f5;
+  --warning: #dd6b20; --warning-light: #fffaf0;
+  --success: #38a169; --success-light: #f0fff4;
+  --gray-50: #f9fafb; --gray-100: #f3f4f6; --gray-200: #e5e7eb;
+  --gray-300: #d1d5db; --gray-400: #9ca3af; --gray-500: #6b7280;
+  --gray-600: #4b5563; --gray-700: #374151; --gray-800: #1f2937; --gray-900: #111827;
+  --sidebar-w: 240px; --header-h: 60px;
+  --radius: 8px;
+  --shadow: 0 1px 3px rgba(0,0,0,.1), 0 1px 2px rgba(0,0,0,.06);
+  --shadow-md: 0 4px 6px rgba(0,0,0,.07), 0 2px 4px rgba(0,0,0,.06);
+  --shadow-lg: 0 10px 15px rgba(0,0,0,.1), 0 4px 6px rgba(0,0,0,.05);
+}
+html, body { height: 100%; font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background: var(--gray-100); color: var(--gray-800); font-size: 14px; }
+
+/* ===== LOGIN ===== */
+#login-screen {
+  min-height: 100vh; display: flex; align-items: center; justify-content: center;
+  background: linear-gradient(135deg, #0a1628 0%, #0a74da 100%);
+}
+.login-box {
+  background: #fff; border-radius: 16px; padding: 40px; width: 100%; max-width: 400px;
+  box-shadow: var(--shadow-lg);
+}
+.login-logo { text-align: center; margin-bottom: 28px; }
+.login-logo h1 { font-size: 28px; font-weight: 800; color: var(--gray-900); }
+.login-logo h1 span { color: var(--primary); }
+.login-logo p { color: var(--gray-500); font-size: 13px; margin-top: 4px; }
+.login-error { background: var(--danger-light); color: var(--danger); border: 1px solid #fed7d7; border-radius: 6px; padding: 10px 14px; font-size: 13px; margin-bottom: 16px; display: none; }
+
+/* ===== APP LAYOUT ===== */
+#app { display: flex; height: 100vh; overflow: hidden; display: none; }
+
+/* ===== SIDEBAR ===== */
+#sidebar {
+  width: var(--sidebar-w); min-width: var(--sidebar-w);
+  background: var(--gray-900); color: #fff;
+  display: flex; flex-direction: column; overflow-y: auto; z-index: 100;
+}
+.sidebar-logo { padding: 20px 20px 16px; border-bottom: 1px solid rgba(255,255,255,.08); }
+.sidebar-logo h1 { font-size: 18px; font-weight: 700; color: #fff; }
+.sidebar-logo h1 span { color: var(--accent); }
+.sidebar-logo p { font-size: 11px; color: var(--gray-400); margin-top: 2px; }
+.sidebar-user { padding: 12px 16px; border-bottom: 1px solid rgba(255,255,255,.08); display: flex; align-items: center; gap: 10px; }
+.sidebar-user .user-avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: #fff; flex-shrink: 0; }
+.sidebar-user .user-info { flex: 1; min-width: 0; }
+.sidebar-user .user-name { font-size: 12px; font-weight: 600; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sidebar-user .user-role { font-size: 10px; color: var(--gray-400); text-transform: capitalize; }
+.sidebar-section { padding: 16px 12px 8px; }
+.sidebar-section-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .8px; color: var(--gray-500); padding: 0 8px; margin-bottom: 6px; }
+.nav-item {
+  display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 6px;
+  cursor: pointer; color: var(--gray-300); font-size: 13.5px; font-weight: 500;
+  transition: background .15s, color .15s; margin-bottom: 2px;
+  border: none; background: none; width: 100%; text-align: left;
+}
+.nav-item:hover { background: rgba(255,255,255,.07); color: #fff; }
+.nav-item.active { background: var(--primary); color: #fff; }
+.nav-item .nav-icon { font-size: 16px; width: 20px; text-align: center; flex-shrink: 0; }
+.nav-badge { margin-left: auto; background: var(--accent); color: #fff; font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 10px; min-width: 18px; text-align: center; }
+.sidebar-footer { margin-top: auto; padding: 12px 16px; border-top: 1px solid rgba(255,255,255,.08); }
+.btn-logout { width: 100%; padding: 8px; background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.1); border-radius: 6px; color: var(--gray-300); font-size: 12px; cursor: pointer; transition: background .15s; }
+.btn-logout:hover { background: rgba(229,62,62,.2); color: #fc8181; }
+
+/* ===== MAIN ===== */
+#main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+#topbar { height: var(--header-h); background: #fff; border-bottom: 1px solid var(--gray-200); display: flex; align-items: center; padding: 0 24px; gap: 16px; box-shadow: var(--shadow); flex-shrink: 0; }
+#topbar h2 { font-size: 17px; font-weight: 600; color: var(--gray-800); flex: 1; }
+.topbar-actions { display: flex; gap: 8px; align-items: center; }
+#content { flex: 1; overflow-y: auto; padding: 24px; }
+
+/* ===== BUTTONS ===== */
+.btn { display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; border-radius: var(--radius); font-size: 13px; font-weight: 500; cursor: pointer; border: none; transition: all .15s; white-space: nowrap; }
+.btn-primary { background: var(--primary); color: #fff; }
+.btn-primary:hover { background: var(--primary-dark); }
+.btn-success { background: var(--success); color: #fff; }
+.btn-success:hover { background: #2f855a; }
+.btn-danger { background: var(--danger); color: #fff; }
+.btn-danger:hover { background: #c53030; }
+.btn-warning { background: var(--warning); color: #fff; }
+.btn-warning:hover { background: #c05621; }
+.btn-ghost { background: transparent; color: var(--gray-600); border: 1px solid var(--gray-300); }
+.btn-ghost:hover { background: var(--gray-100); }
+.btn-sm { padding: 5px 10px; font-size: 12px; }
+.btn-icon { padding: 6px 8px; }
+.btn:disabled { opacity: .5; cursor: not-allowed; }
+
+/* ===== CARDS ===== */
+.card { background: #fff; border-radius: var(--radius); box-shadow: var(--shadow); border: 1px solid var(--gray-200); }
+.card-header { padding: 16px 20px; border-bottom: 1px solid var(--gray-100); display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.card-header h3 { font-size: 15px; font-weight: 600; }
+.card-body { padding: 20px; }
+
+/* ===== STATS ===== */
+.stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 16px; margin-bottom: 24px; }
+.stat-card { background: #fff; border-radius: var(--radius); padding: 18px 20px; box-shadow: var(--shadow); border: 1px solid var(--gray-200); }
+.stat-label { font-size: 12px; color: var(--gray-500); font-weight: 500; text-transform: uppercase; letter-spacing: .5px; }
+.stat-value { font-size: 28px; font-weight: 700; line-height: 1; margin: 4px 0 2px; }
+.stat-sub { font-size: 11px; color: var(--gray-400); }
+.stat-blue .stat-value { color: var(--primary); }
+.stat-green .stat-value { color: var(--success); }
+.stat-orange .stat-value { color: var(--warning); }
+.stat-teal .stat-value { color: var(--accent); }
+
+/* ===== FORMS ===== */
+.form-group { margin-bottom: 16px; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.form-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+label { display: block; font-size: 12px; font-weight: 600; color: var(--gray-600); margin-bottom: 5px; text-transform: uppercase; letter-spacing: .4px; }
+input[type=text], input[type=email], input[type=tel], input[type=date], input[type=password], input[type=search], select, textarea {
+  width: 100%; padding: 8px 12px; border: 1px solid var(--gray-300); border-radius: 6px;
+  font-size: 13.5px; color: var(--gray-800); background: #fff;
+  transition: border-color .15s, box-shadow .15s; outline: none; font-family: inherit;
+}
+input:focus, select:focus, textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(10,116,218,.12); }
+textarea { resize: vertical; min-height: 80px; }
+
+/* ===== MODAL ===== */
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 20px; opacity: 0; pointer-events: none; transition: opacity .2s; }
+.modal-overlay.open { opacity: 1; pointer-events: all; }
+.modal { background: #fff; border-radius: 12px; box-shadow: var(--shadow-lg); width: 100%; max-width: 560px; max-height: 90vh; overflow-y: auto; transform: translateY(20px); transition: transform .2s; }
+.modal-overlay.open .modal { transform: translateY(0); }
+.modal-header { padding: 20px 24px 16px; border-bottom: 1px solid var(--gray-100); display: flex; align-items: center; justify-content: space-between; }
+.modal-header h3 { font-size: 16px; font-weight: 600; }
+.modal-close { background: none; border: none; font-size: 20px; cursor: pointer; color: var(--gray-400); padding: 2px 6px; border-radius: 4px; }
+.modal-close:hover { background: var(--gray-100); }
+.modal-body { padding: 20px 24px; }
+.modal-footer { padding: 16px 24px; border-top: 1px solid var(--gray-100); display: flex; justify-content: flex-end; gap: 8px; }
+
+/* ===== CUSTOMER CARDS ===== */
+.customer-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
+.customer-card { background: #fff; border: 1px solid var(--gray-200); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; transition: box-shadow .15s; }
+.customer-card:hover { box-shadow: var(--shadow-md); }
+.customer-card-header { padding: 14px 16px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid var(--gray-100); }
+.avatar { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 700; flex-shrink: 0; color: #fff; }
+.customer-card-info h4 { font-size: 14px; font-weight: 600; }
+.customer-card-info p { font-size: 12px; color: var(--gray-500); margin-top: 1px; }
+.customer-card-body { padding: 12px 16px; }
+.customer-card-meta { display: flex; flex-direction: column; gap: 5px; margin-bottom: 12px; }
+.customer-card-meta span { font-size: 12px; color: var(--gray-500); display: flex; align-items: center; gap: 6px; }
+.customer-card-meta span strong { color: var(--gray-700); }
+.customer-card-footer { padding: 10px 16px; background: var(--gray-50); border-top: 1px solid var(--gray-100); display: flex; gap: 6px; flex-wrap: wrap; }
+
+/* ===== BADGES ===== */
+.badge { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 20px; font-size: 11px; font-weight: 600; white-space: nowrap; }
+.badge-blue { background: var(--primary-light); color: var(--primary-dark); }
+.badge-green { background: var(--success-light); color: var(--success); }
+.badge-orange { background: var(--warning-light); color: var(--warning); }
+.badge-red { background: var(--danger-light); color: var(--danger); }
+.badge-gray { background: var(--gray-100); color: var(--gray-600); }
+.badge-teal { background: #e6faf8; color: var(--accent-dark); }
+
+/* ===== NOTES ===== */
+.notes-list { display: flex; flex-direction: column; gap: 10px; }
+.note-item { background: var(--gray-50); border: 1px solid var(--gray-200); border-radius: 8px; padding: 12px 14px; position: relative; }
+.note-meta { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; flex-wrap: wrap; }
+.note-date { font-size: 11px; color: var(--gray-400); }
+.note-by { font-size: 11px; color: var(--gray-400); }
+.note-text { font-size: 13.5px; color: var(--gray-700); line-height: 1.5; }
+.note-delete { position: absolute; top: 8px; right: 8px; background: none; border: none; color: var(--gray-300); cursor: pointer; font-size: 14px; padding: 2px 5px; border-radius: 4px; }
+.note-delete:hover { background: var(--danger-light); color: var(--danger); }
+.no-notes { text-align: center; padding: 24px; color: var(--gray-400); font-size: 13px; }
+
+/* ===== TICKETS ===== */
+.ticket-list { display: flex; flex-direction: column; gap: 12px; }
+.ticket-item { background: #fff; border: 1px solid var(--gray-200); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; }
+.ticket-item-header { padding: 12px 16px; display: flex; align-items: center; gap: 12px; cursor: pointer; user-select: none; }
+.ticket-item-header:hover { background: var(--gray-50); }
+.ticket-priority-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.ticket-item-info { flex: 1; }
+.ticket-item-info h4 { font-size: 13.5px; font-weight: 600; }
+.ticket-item-info p { font-size: 12px; color: var(--gray-500); margin-top: 2px; }
+.ticket-item-meta { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.ticket-body { padding: 0 16px 14px; border-top: 1px solid var(--gray-100); display: none; }
+.ticket-body.open { display: block; padding-top: 14px; }
+.ticket-desc { font-size: 13px; color: var(--gray-600); line-height: 1.6; margin-bottom: 14px; }
+.ticket-updates { display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px; }
+.ticket-update { background: var(--gray-50); border-left: 3px solid var(--primary); border-radius: 0 6px 6px 0; padding: 8px 12px; }
+.update-meta { font-size: 11px; color: var(--gray-400); margin-bottom: 3px; }
+.update-text { font-size: 13px; color: var(--gray-700); }
+.ticket-actions-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.progress-wrap { background: var(--gray-200); border-radius: 10px; height: 6px; overflow: hidden; }
+.progress-bar { height: 100%; border-radius: 10px; transition: width .3s; }
+.source-badge { font-size: 10px; padding: 1px 6px; border-radius: 10px; background: #fef3c7; color: #92400e; font-weight: 600; }
+.source-badge.internal { background: #e0e7ff; color: #3730a3; }
+
+/* ===== FILTER BAR ===== */
+.filter-bar { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; align-items: center; }
+.filter-bar input, .filter-bar select { max-width: 220px; }
+
+/* ===== SEARCH ===== */
+.search-bar-wrap { position: relative; margin-bottom: 20px; }
+.search-bar-wrap input { padding-left: 40px; font-size: 15px; height: 44px; }
+.search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--gray-400); font-size: 18px; pointer-events: none; }
+.search-result-item { background: #fff; border: 1px solid var(--gray-200); border-radius: var(--radius); padding: 14px 16px; margin-bottom: 10px; box-shadow: var(--shadow); }
+.sr-header { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; flex-wrap: wrap; }
+.sr-company { font-size: 14px; font-weight: 600; }
+.sr-note { font-size: 13px; color: var(--gray-600); line-height: 1.5; }
+.sr-date { font-size: 11px; color: var(--gray-400); }
+mark.highlight { background: #fff3cd; border-radius: 2px; padding: 0 2px; }
+.search-empty { text-align: center; padding: 48px 20px; color: var(--gray-400); }
+.search-empty-icon { font-size: 48px; margin-bottom: 12px; }
+
+/* ===== EMPTY STATE ===== */
+.empty-state { text-align: center; padding: 48px 20px; }
+.empty-icon { font-size: 48px; margin-bottom: 12px; }
+.empty-state h3 { font-size: 16px; font-weight: 600; color: var(--gray-600); margin-bottom: 6px; }
+.empty-state p { font-size: 13px; color: var(--gray-400); }
+
+/* ===== CSV IMPORT ===== */
+.import-zone { border: 2px dashed var(--gray-300); border-radius: 8px; padding: 24px; text-align: center; cursor: pointer; transition: border-color .15s, background .15s; }
+.import-zone:hover, .import-zone.drag-over { border-color: var(--primary); background: var(--primary-light); }
+.import-zone input[type=file] { display: none; }
+.import-result { margin-top: 12px; padding: 12px; border-radius: 6px; font-size: 13px; }
+.import-result.success { background: var(--success-light); color: var(--success); border: 1px solid #c6f6d5; }
+.import-result.error { background: var(--danger-light); color: var(--danger); border: 1px solid #fed7d7; }
+
+/* ===== USERS TABLE ===== */
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; }
+th { text-align: left; padding: 10px 14px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .5px; color: var(--gray-500); background: var(--gray-50); border-bottom: 1px solid var(--gray-200); }
+td { padding: 12px 14px; border-bottom: 1px solid var(--gray-100); font-size: 13.5px; vertical-align: middle; }
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: var(--gray-50); }
+.table-actions { display: flex; gap: 6px; }
+
+/* ===== MISC ===== */
+.divider { border: none; border-top: 1px solid var(--gray-200); margin: 16px 0; }
+.text-muted { color: var(--gray-400); font-size: 12px; }
+.page { display: none; }
+.page.active { display: block; }
+.toast { position: fixed; bottom: 24px; right: 24px; background: var(--gray-900); color: #fff; padding: 12px 20px; border-radius: 8px; font-size: 13px; box-shadow: var(--shadow-lg); z-index: 9999; transform: translateY(80px); transition: transform .3s; pointer-events: none; }
+.toast.show { transform: translateY(0); }
+.toast.success { background: var(--success); }
+.toast.error { background: var(--danger); }
+.spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(255,255,255,.3); border-top-color: #fff; border-radius: 50%; animation: spin .6s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.api-key-box { background: var(--gray-900); color: #a8ff78; font-family: monospace; font-size: 12px; padding: 12px 16px; border-radius: 6px; word-break: break-all; }
+</style>
+</head>
+<body>
+<!-- ===== LOGIN SCREEN ===== -->
+<div id="login-screen">
+<div class="login-box">
+<div class="login-logo">
+<h1>IT<span>Pro</span> CRM</h1>
+<p>Sign in to your account</p>
+</div>
+<div class="login-error" id="login-error"></div>
+<div class="form-group">
+<label>Email Address</label>
+<input autocomplete="email" id="login-email" placeholder="admin@itpro.com" type="email"/>
+</div>
+<div class="form-group">
+<label>Password</label>
+<input autocomplete="current-password" id="login-password" placeholder="••••••••" type="password"/>
+</div>
+<button class="btn btn-primary" id="login-btn" onclick="doLogin()" style="width:100%;justify-content:center;padding:10px;">Sign In</button>
+</div>
+</div>
+<!-- ===== MAIN APP ===== -->
+<div id="app">
+<!-- SIDEBAR -->
+<nav id="sidebar">
+<div class="sidebar-logo">
+<h1>IT<span>Pro</span> CRM</h1>
+<p>Customer Management</p>
+</div>
+<div class="sidebar-user">
+<div class="user-avatar" id="sb-avatar">A</div>
+<div class="user-info">
+<div class="user-name" id="sb-name">Admin</div>
+<div class="user-role" id="sb-role">admin</div>
+</div>
+</div>
+<div class="sidebar-section">
+<div class="sidebar-section-label">Overview</div>
+<button class="nav-item active" onclick="navigate('dashboard')"><span class="nav-icon">📊</span><span>Dashboard</span></button>
+</div>
+<div class="sidebar-section">
+<div class="sidebar-section-label">Customers</div>
+<button class="nav-item" onclick="navigate('prospects')"><span class="nav-icon">🎯</span><span>Prospects</span><span class="nav-badge" id="badge-prospects">0</span></button>
+<button class="nav-item" onclick="navigate('customers')"><span class="nav-icon">🏢</span><span>Current Customers</span><span class="nav-badge" id="badge-customers">0</span></button>
+</div>
+<div class="sidebar-section">
+<div class="sidebar-section-label">Support</div>
+<button class="nav-item" onclick="navigate('tickets')"><span class="nav-icon">🎫</span><span>Tickets</span><span class="nav-badge" id="badge-tickets">0</span></button>
+</div>
+<div class="sidebar-section">
+<div class="sidebar-section-label">Tools</div>
+<button class="nav-item" onclick="navigate('search')"><span class="nav-icon">🔍</span><span>Search Notes</span></button>
+<button class="nav-item" id="nav-users" onclick="navigate('users')" style="display:none;"><span class="nav-icon">👥</span><span>Users</span></button>
+<button class="nav-item" onclick="navigate('settings')"><span class="nav-icon">⚙️</span><span>Settings</span></button>
+</div>
+<div class="sidebar-footer">
+<button class="btn-logout" onclick="doLogout()">🚪 Sign Out</button>
+</div>
+</nav>
+<!-- MAIN -->
+<div id="main">
+<div id="topbar">
+<h2 id="page-title">Dashboard</h2>
+<div class="topbar-actions" id="topbar-actions"></div>
+</div>
+<div id="content">
+<!-- DASHBOARD -->
+<div class="page active" id="page-dashboard">
+<div class="stats-row" id="dash-stats"></div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+<div class="card"><div class="card-header"><h3>📋 Recent Activity</h3></div><div id="dash-activity" style="padding:0;"></div></div>
+<div class="card"><div class="card-header"><h3>🎫 Open Tickets</h3></div><div id="dash-tickets" style="padding:0;"></div></div>
+</div>
+</div>
+<!-- PROSPECTS -->
+<div class="page" id="page-prospects">
+<div class="filter-bar">
+<input id="prospect-search" oninput="renderProspects()" placeholder="🔍 Filter prospects..." type="text"/>
+<select id="prospect-status-filter" onchange="renderProspects()">
+<option value="">All Statuses</option>
+<option>New Lead</option><option>Contacted</option><option>Qualified</option>
+<option>Proposal Sent</option><option>Negotiating</option><option>Lost</option>
+</select>
+</div>
+<div class="customer-grid" id="prospect-grid"></div>
+</div>
+<!-- CUSTOMERS -->
+<div class="page" id="page-customers">
+<div class="filter-bar">
+<input id="customer-search" oninput="renderCustomers()" placeholder="🔍 Filter customers..." type="text"/>
+<select id="customer-tier-filter" onchange="renderCustomers()">
+<option value="">All Tiers</option>
+<option>Enterprise</option><option>Business</option><option>Starter</option>
+</select>
+</div>
+<div class="customer-grid" id="customer-grid"></div>
+</div>
+<!-- TICKETS -->
+<div class="page" id="page-tickets">
+<div class="filter-bar">
+<input id="ticket-search" oninput="renderTickets()" placeholder="🔍 Filter tickets..." type="text"/>
+<select id="ticket-status-filter" onchange="renderTickets()">
+<option value="">All Statuses</option>
+<option>Open</option><option>In Progress</option>
+<option>Waiting on Customer</option><option>Resolved</option><option>Closed</option>
+</select>
+<select id="ticket-priority-filter" onchange="renderTickets()">
+<option value="">All Priorities</option>
+<option>Critical</option><option>High</option><option>Medium</option><option>Low</option>
+</select>
+</div>
+<div id="ticket-list"></div>
+</div>
+<!-- SEARCH -->
+<div class="page" id="page-search">
+<div class="search-bar-wrap">
+<span class="search-icon">🔍</span>
+<input autocomplete="off" id="global-search" oninput="runSearch()" placeholder="Search all notes, contacts, and tickets..." type="search"/>
+</div>
+<div style="display:flex;gap:16px;margin-bottom:16px;flex-wrap:wrap;">
+<label style="display:flex;align-items:center;gap:6px;font-size:13px;text-transform:none;letter-spacing:0;font-weight:500;cursor:pointer;"><input checked="" id="sf-prospects" onchange="runSearch()" type="checkbox"/> Prospects</label>
+<label style="display:flex;align-items:center;gap:6px;font-size:13px;text-transform:none;letter-spacing:0;font-weight:500;cursor:pointer;"><input checked="" id="sf-customers" onchange="runSearch()" type="checkbox"/> Customers</label>
+<label style="display:flex;align-items:center;gap:6px;font-size:13px;text-transform:none;letter-spacing:0;font-weight:500;cursor:pointer;"><input checked="" id="sf-tickets" onchange="runSearch()" type="checkbox"/> Tickets</label>
+</div>
+<div id="search-results"></div>
+</div>
+<!-- USERS (admin only) -->
+<div class="page" id="page-users">
+<div class="card">
+<div class="card-header"><h3>👥 Team Members</h3></div>
+<div class="table-wrap"><table id="users-table"><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th>Created</th><th>Actions</th></tr></thead><tbody id="users-tbody"></tbody></table></div>
+</div>
+</div>
+<!-- SETTINGS -->
+<div class="page" id="page-settings">
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;max-width:900px;">
+<div class="card">
+<div class="card-header"><h3>🔑 Change Password</h3></div>
+<div class="card-body">
+<div class="form-group"><label>Current Password</label><input id="cp-current" placeholder="••••••••" type="password"/></div>
+<div class="form-group"><label>New Password</label><input id="cp-new" placeholder="Min 6 characters" type="password"/></div>
+<div class="form-group"><label>Confirm New Password</label><input id="cp-confirm" placeholder="Repeat new password" type="password"/></div>
+<button class="btn btn-primary" onclick="changePassword()">Update Password</button>
+</div>
+</div>
+<div class="card">
+<div class="card-header"><h3>📡 Public Ticket API</h3></div>
+<div class="card-body">
+<p style="font-size:13px;color:var(--gray-600);margin-bottom:12px;">Use this endpoint to receive tickets from your customer-facing app or website.</p>
+<div class="form-group"><label>API Endpoint</label><div class="api-key-box" id="api-endpoint">POST /api/tickets/public/submit</div></div>
+<div class="form-group"><label>API Key (x-api-key header)</label><div class="api-key-box" id="api-key-display">itpro-public-key-change-me</div></div>
+<div class="form-group"><label>Example (JavaScript)</label>
+<div class="api-key-box" style="font-size:11px;line-height:1.6;">fetch('/api/tickets/public/submit', {<br/>  method: 'POST',<br/>  headers: {<br/>    'Content-Type': 'application/json',<br/>    'x-api-key': 'itpro-public-key-change-me'<br/>  },<br/>  body: JSON.stringify({<br/>    subject: 'Cannot connect to VPN',<br/>    customer_name: 'John Smith',<br/>    customer_email: 'john@acme.com',<br/>    priority: 'High',<br/>    category: 'Network Issue'<br/>  })<br/>})</div>
+</div>
+<a class="btn btn-ghost btn-sm" href="/api/docs/public-ticket" target="_blank">📖 Full API Docs</a>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- ===== MODALS ===== -->
+<!-- Prospect Modal -->
+<div class="modal-overlay" id="modal-prospect">
+<div class="modal">
+<div class="modal-header"><h3 id="modal-prospect-title">Add Prospect</h3><button class="modal-close" onclick="closeModal('modal-prospect')">✕</button></div>
+<div class="modal-body">
+<input id="prospect-id" type="hidden"/>
+<div class="form-row">
+<div class="form-group"><label>Company Name *</label><input id="p-company" placeholder="Acme Corp" type="text"/></div>
+<div class="form-group"><label>Contact Name *</label><input id="p-contact" placeholder="John Smith" type="text"/></div>
+</div>
+<div class="form-row">
+<div class="form-group"><label>Email</label><input id="p-email" placeholder="john@acme.com" type="email"/></div>
+<div class="form-group"><label>Phone</label><input id="p-phone" placeholder="(555) 000-0000" type="tel"/></div>
+</div>
+<div class="form-row">
+<div class="form-group"><label>Status</label>
+<select id="p-status"><option>New Lead</option><option>Contacted</option><option>Qualified</option><option>Proposal Sent</option><option>Negotiating</option><option>Lost</option></select>
+</div>
+<div class="form-group"><label>Potential Value</label><input id="p-value" placeholder="$5,000/yr" type="text"/></div>
+</div>
+<div class="form-group"><label>Industry</label><input id="p-industry" placeholder="Healthcare, Finance, Retail..." type="text"/></div>
+<div class="form-group"><label>Initial Note</label><textarea id="p-notes" placeholder="Initial notes about this prospect..."></textarea></div>
+</div>
+<div class="modal-footer">
+<button class="btn btn-ghost" onclick="closeModal('modal-prospect')">Cancel</button>
+<button class="btn btn-primary" onclick="saveProspect()">Save Prospect</button>
+</div>
+</div>
+</div>
+<!-- CSV Import Modal -->
+<div class="modal-overlay" id="modal-import">
+<div class="modal" style="max-width:480px;">
+<div class="modal-header"><h3 id="modal-import-title">📥 Import CSV</h3><button class="modal-close" onclick="closeModal('modal-import')">✕</button></div>
+<div class="modal-body">
+<input id="import-type" type="hidden"/>
+<p style="font-size:13px;color:var(--gray-600);margin-bottom:16px;">Upload a CSV file. Required columns: <strong>company</strong>, <strong>contact</strong>. Optional: email, phone, status/tier, value, industry.</p>
+<div class="import-zone" id="import-zone" onclick="document.getElementById('csv-file').click()">
+<input accept=".csv" id="csv-file" onchange="handleCsvFile(event)" type="file"/>
+<div style="font-size:32px;margin-bottom:8px;">📂</div>
+<div style="font-size:14px;font-weight:600;color:var(--gray-700);">Click to select CSV file</div>
+<div style="font-size:12px;color:var(--gray-400);margin-top:4px;">or drag and drop here</div>
+</div>
+<div class="import-result" id="import-result" style="display:none;"></div>
+<div style="margin-top:16px;">
+<p style="font-size:12px;color:var(--gray-500);font-weight:600;margin-bottom:6px;">EXAMPLE CSV FORMAT:</p>
+<div class="api-key-box" style="font-size:11px;">company,contact,email,phone,status,value,industry<br/>Acme Corp,John Smith,john@acme.com,555-1234,New Lead,$5000/yr,Healthcare</div>
+</div>
+</div>
+<div class="modal-footer">
+<button class="btn btn-ghost" onclick="closeModal('modal-import')">Close</button>
+</div>
+</div>
+</div>
+<!-- Customer Modal -->
+<div class="modal-overlay" id="modal-customer">
+<div class="modal">
+<div class="modal-header"><h3 id="modal-customer-title">Add Customer</h3><button class="modal-close" onclick="closeModal('modal-customer')">✕</button></div>
+<div class="modal-body">
+<input id="customer-id" type="hidden"/>
+<div class="form-row">
+<div class="form-group"><label>Company Name *</label><input id="c-company" placeholder="Acme Corp" type="text"/></div>
+<div class="form-group"><label>Contact Name *</label><input id="c-contact" placeholder="Jane Doe" type="text"/></div>
+</div>
+<div class="form-row">
+<div class="form-group"><label>Email</label><input id="c-email" placeholder="jane@acme.com" type="email"/></div>
+<div class="form-group"><label>Phone</label><input id="c-phone" placeholder="(555) 000-0000" type="tel"/></div>
+</div>
+<div class="form-row">
+<div class="form-group"><label>Service Tier</label>
+<select id="c-tier"><option>Starter</option><option>Business</option><option>Enterprise</option></select>
+</div>
+<div class="form-group"><label>Contract Value</label><input id="c-value" placeholder="$1,200/mo" type="text"/></div>
+</div>
+<div class="form-row">
+<div class="form-group"><label>Start Date</label><input id="c-start" type="date"/></div>
+<div class="form-group"><label>Industry</label><input id="c-industry" placeholder="Healthcare, Finance..." type="text"/></div>
+</div>
+<div class="form-group"><label>Initial Note</label><textarea id="c-notes" placeholder="Initial notes about this customer..."></textarea></div>
+</div>
+<div class="modal-footer">
+<button class="btn btn-ghost" onclick="closeModal('modal-customer')">Cancel</button>
+<button class="btn btn-primary" onclick="saveCustomer()">Save Customer</button>
+</div>
+</div>
+</div>
+<!-- Note Modal -->
+<div class="modal-overlay" id="modal-note">
+<div class="modal" style="max-width:480px;">
+<div class="modal-header"><h3>📝 Add Contact Note</h3><button class="modal-close" onclick="closeModal('modal-note')">✕</button></div>
+<div class="modal-body">
+<input id="note-entity-type" type="hidden"/>
+<input id="note-entity-id" type="hidden"/>
+<div class="form-row">
+<div class="form-group"><label>Contact Type</label>
+<select id="note-type">
+<option>📞 Phone Call</option><option>📧 Email</option><option>🤝 In-Person Meeting</option>
+<option>💬 Video Call</option><option>📱 Text Message</option><option>📋 Internal Note</option>
+</select>
+</div>
+<div class="form-group"><label>Date</label><input id="note-date" type="date"/></div>
+</div>
+<div class="form-group"><label>Note *</label><textarea id="note-text" placeholder="Describe the interaction, outcome, next steps..." style="min-height:120px;"></textarea></div>
+</div>
+<div class="modal-footer">
+<button class="btn btn-ghost" onclick="closeModal('modal-note')">Cancel</button>
+<button class="btn btn-primary" onclick="saveNote()">Add Note</button>
+</div>
+</div>
+</div>
+<!-- View Contact Modal -->
+<div class="modal-overlay" id="modal-view">
+<div class="modal" style="max-width:640px;">
+<div class="modal-header"><h3 id="modal-view-title">Contact Details</h3><button class="modal-close" onclick="closeModal('modal-view')">✕</button></div>
+<div class="modal-body" id="modal-view-body"></div>
+</div>
+</div>
+<!-- Ticket Modal -->
+<div class="modal-overlay" id="modal-ticket">
+<div class="modal">
+<div class="modal-header"><h3 id="modal-ticket-title">New Support Ticket</h3><button class="modal-close" onclick="closeModal('modal-ticket')">✕</button></div>
+<div class="modal-body">
+<input id="ticket-id" type="hidden"/>
+<div class="form-row">
+<div class="form-group"><label>Customer *</label><select id="t-customer"></select></div>
+<div class="form-group"><label>Priority</label>
+<select id="t-priority"><option>Low</option><option selected="">Medium</option><option>High</option><option>Critical</option></select>
+</div>
+</div>
+<div class="form-group"><label>Subject *</label><input id="t-subject" placeholder="Brief description of the issue" type="text"/></div>
+<div class="form-group"><label>Category</label>
+<select id="t-category">
+<option>Network Issue</option><option>Hardware Failure</option><option>Software Bug</option>
+<option>Security Incident</option><option>User Access</option><option>Backup/Recovery</option>
+<option>Performance</option><option>New Request</option><option>Other</option>
+</select>
+</div>
+<div class="form-group"><label>Description</label><textarea id="t-desc" placeholder="Detailed description..." style="min-height:100px;"></textarea></div>
+</div>
+<div class="modal-footer">
+<button class="btn btn-ghost" onclick="closeModal('modal-ticket')">Cancel</button>
+<button class="btn btn-primary" onclick="saveTicket()">Create Ticket</button>
+</div>
+</div>
+</div>
+<!-- Ticket Update Modal -->
+<div class="modal-overlay" id="modal-ticket-update">
+<div class="modal" style="max-width:480px;">
+<div class="modal-header"><h3>🔄 Update Ticket</h3><button class="modal-close" onclick="closeModal('modal-ticket-update')">✕</button></div>
+<div class="modal-body">
+<input id="tu-ticket-id" type="hidden"/>
+<div class="form-row">
+<div class="form-group"><label>New Status</label>
+<select id="tu-status"><option>Open</option><option>In Progress</option><option>Waiting on Customer</option><option>Resolved</option><option>Closed</option></select>
+</div>
+<div class="form-group"><label>Assigned To</label><input id="tu-assigned" placeholder="Technician name" type="text"/></div>
+</div>
+<div class="form-group"><label>Update Note *</label><textarea id="tu-note" placeholder="What was done? Current status?" style="min-height:100px;"></textarea></div>
+</div>
+<div class="modal-footer">
+<button class="btn btn-ghost" onclick="closeModal('modal-ticket-update')">Cancel</button>
+<button class="btn btn-success" onclick="saveTicketUpdate()">Post Update</button>
+</div>
+</div>
+</div>
+<!-- User Modal -->
+<div class="modal-overlay" id="modal-user">
+<div class="modal" style="max-width:440px;">
+<div class="modal-header"><h3 id="modal-user-title">Add User</h3><button class="modal-close" onclick="closeModal('modal-user')">✕</button></div>
+<div class="modal-body">
+<input id="user-id" type="hidden"/>
+<div class="form-group"><label>Full Name *</label><input id="u-name" placeholder="Jane Smith" type="text"/></div>
+<div class="form-group"><label>Email *</label><input id="u-email" placeholder="jane@itpro.com" type="email"/></div>
+<div class="form-group"><label>Password *</label><input id="u-password" placeholder="Min 6 characters" type="password"/></div>
+<div class="form-row">
+<div class="form-group"><label>Role</label>
+<select id="u-role"><option value="technician">Technician</option><option value="admin">Admin</option></select>
+</div>
+<div class="form-group"><label>Status</label>
+<select id="u-active"><option value="1">Active</option><option value="0">Inactive</option></select>
+</div>
+</div>
+</div>
+<div class="modal-footer">
+<button class="btn btn-ghost" onclick="closeModal('modal-user')">Cancel</button>
+<button class="btn btn-primary" onclick="saveUser()">Save User</button>
+</div>
+</div>
+</div>
+<!-- Confirm Modal -->
+<div class="modal-overlay" id="modal-confirm">
+<div class="modal" style="max-width:400px;">
+<div class="modal-header"><h3>⚠️ Confirm</h3><button class="modal-close" onclick="closeModal('modal-confirm')">✕</button></div>
+<div class="modal-body"><p id="confirm-msg" style="font-size:14px;color:var(--gray-600);line-height:1.6;"></p></div>
+<div class="modal-footer">
+<button class="btn btn-ghost" onclick="closeModal('modal-confirm')">Cancel</button>
+<button class="btn btn-danger" id="confirm-btn">Confirm</button>
+</div>
+</div>
+</div>
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+<script>
+// ============================================================
+//  CONFIG & STATE
+// ============================================================
+const API = '';  // same origin
+let token = localStorage.getItem('crm_token');
+let currentUser = null;
+let prospectsCache = [];
+let customersCache = [];
+let ticketsCache = [];
+
+// ============================================================
+//  API HELPER
+// ============================================================
+async function api(method, path, body, isFormData) {
+  const opts = {
+    method,
+    headers: { 'Authorization': 'Bearer ' + token }
+  };
+  if (body && !isFormData) {
+    opts.headers['Content-Type'] = 'application/json';
+    opts.body = JSON.stringify(body);
+  } else if (isFormData) {
+    opts.body = body;
+  }
+  const res = await fetch(API + path, opts);
+  if (res.status === 401 || res.status === 403) { doLogout(); return null; }
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || 'Request failed');
+  return data;
+}
+
+// ============================================================
+//  AUTH
+// ============================================================
+async function doLogin() {
+  const email = document.getElementById('login-email').value.trim();
+  const password = document.getElementById('login-password').value;
+  const btn = document.getElementById('login-btn');
+  const errEl = document.getElementById('login-error');
+  errEl.style.display = 'none';
+  if (!email || !password) { errEl.textContent = 'Please enter email and password.'; errEl.style.display = 'block'; return; }
+  btn.innerHTML = '<span class="spinner"></span> Signing in...';
+  btn.disabled = true;
+  try {
+    const res = await fetch(API + '/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Login failed');
+    token = data.token;
+    currentUser = data.user;
+    localStorage.setItem('crm_token', token);
+    showApp();
+  } catch (err) {
+    errEl.textContent = err.message;
+    errEl.style.display = 'block';
+  } finally {
+    btn.innerHTML = 'Sign In';
+    btn.disabled = false;
+  }
+}
+
+document.getElementById('login-password').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+
+function doLogout() {
+  token = null; currentUser = null;
+  localStorage.removeItem('crm_token');
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('login-password').value = '';
+}
+
+async function showApp() {
+  try {
+    currentUser = await api('GET', '/api/auth/me');
+    if (!currentUser) return;
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app').style.display = 'flex';
+    document.getElementById('sb-name').textContent = currentUser.name;
+    document.getElementById('sb-role').textContent = currentUser.role;
+    document.getElementById('sb-avatar').textContent = currentUser.name.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
+    if (currentUser.role === 'admin') document.getElementById('nav-users').style.display = 'flex';
+    navigate('dashboard');
+  } catch { doLogout(); }
+}
+
+// Auto-login if token exists
+if (token) showApp();
+
+// ============================================================
+//  NAVIGATION
+// ============================================================
+const PAGE_TITLES = { dashboard:'Dashboard', prospects:'Prospects', customers:'Current Customers', tickets:'Support Tickets', search:'Search Notes', users:'User Management', settings:'Settings' };
+const PAGE_ACTIONS = {
+  dashboard: '',
+  prospects: `<button class="btn btn-ghost btn-sm" onclick="openImport('prospect')">📥 Import CSV</button>
+              <button class="btn btn-ghost btn-sm" onclick="exportCsv('prospects')">📤 Export CSV</button>
+              <button class="btn btn-primary" onclick="openAddProspect()">＋ Add Prospect</button>`,
+  customers: `<button class="btn btn-ghost btn-sm" onclick="openImport('customer')">📥 Import CSV</button>
+              <button class="btn btn-ghost btn-sm" onclick="exportCsv('customers')">📤 Export CSV</button>
+              <button class="btn btn-primary" onclick="openAddCustomer()">＋ Add Customer</button>`,
+  tickets: `<button class="btn btn-primary" onclick="openAddTicket()">＋ New Ticket</button>`,
+  search: '', users: `<button class="btn btn-primary" onclick="openAddUser()">＋ Add User</button>`,
+  settings: ''
+};
+
+function navigate(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n => {
+    if (n.getAttribute('onclick') && n.getAttribute('onclick').includes("'" + page + "'")) n.classList.add('active');
+  });
+  document.getElementById('page-title').textContent = PAGE_TITLES[page];
+  document.getElementById('topbar-actions').innerHTML = PAGE_ACTIONS[page] || '';
+  if (page === 'dashboard') loadDashboard();
+  if (page === 'prospects') loadProspects();
+  if (page === 'customers') loadCustomers();
+  if (page === 'tickets') loadTickets();
+  if (page === 'users') loadUsers();
+  if (page === 'search') { document.getElementById('global-search').focus(); }
+}
+
+// ============================================================
+//  TOAST
+// ============================================================
+function toast(msg, type = '') {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'toast show' + (type ? ' ' + type : '');
+  setTimeout(() => el.classList.remove('show'), 3000);
+}
+
+// ============================================================
+//  MODAL HELPERS
+// ============================================================
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+document.querySelectorAll('.modal-overlay').forEach(m => {
+  m.addEventListener('click', e => { if (e.target === m) m.classList.remove('open'); });
+});
+
+// ============================================================
+//  HELPERS
+// ============================================================
+const COLORS = ['#0a74da','#00c2a8','#7c3aed','#dd6b20','#e53e3e','#38a169','#d69e2e','#3182ce'];
+function avatarColor(name) { let h=0; for(let c of (name||'A')) h=(h*31+c.charCodeAt(0))%COLORS.length; return COLORS[h]; }
+function initials(name) { return (name||'?').split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2); }
+function fmtDate(d) { if(!d) return ''; try { return new Date(d.includes('T')?d:d+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}); } catch { return d; } }
+function today() { return new Date().toISOString().split('T')[0]; }
+function esc(s) { if(!s) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function highlight(text, q) { if(!q) return esc(text); const re=new RegExp('('+q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+')','gi'); return esc(text).replace(re,'<mark class="highlight">$1</mark>'); }
+
+const STATUS_BADGE = {
+  'New Lead':'badge-blue','Contacted':'badge-teal','Qualified':'badge-green',
+  'Proposal Sent':'badge-orange','Negotiating':'badge-orange','Lost':'badge-red',
+  'Open':'badge-blue','In Progress':'badge-orange','Waiting on Customer':'badge-gray',
+  'Resolved':'badge-green','Closed':'badge-gray',
+  'Enterprise':'badge-blue','Business':'badge-teal','Starter':'badge-gray'
+};
+const PRIORITY_COLOR = { 'Critical':'#e53e3e','High':'#dd6b20','Medium':'#0a74da','Low':'#38a169' };
+function badge(text) { return `<span class="badge ${STATUS_BADGE[text]||'badge-gray'}">${esc(text)}</span>`; }
+
+function updateBadges() {
+  document.getElementById('badge-prospects').textContent = prospectsCache.length;
+  document.getElementById('badge-customers').textContent = customersCache.length;
+  const open = ticketsCache.filter(t => !['Resolved','Closed'].includes(t.status)).length;
+  document.getElementById('badge-tickets').textContent = open;
+}
+
+// ============================================================
+//  DASHBOARD
+// ============================================================
+async function loadDashboard() {
+  await Promise.all([loadProspectsData(), loadCustomersData(), loadTicketsData()]);
+  const notes = await api('GET', '/api/search?q=a&types=prospects,customers').catch(()=>[]) || [];
+
+  document.getElementById('dash-stats').innerHTML = `
+    <div class="stat-card stat-blue"><div class="stat-label">Prospects</div><div class="stat-value">${prospectsCache.length}</div><div class="stat-sub">In pipeline</div></div>
+    <div class="stat-card stat-green"><div class="stat-label">Customers</div><div class="stat-value">${customersCache.length}</div><div class="stat-sub">Active accounts</div></div>
+    <div class="stat-card stat-orange"><div class="stat-label">Open Tickets</div><div class="stat-value">${ticketsCache.filter(t=>!['Resolved','Closed'].includes(t.status)).length}</div><div class="stat-sub">Needs attention</div></div>
+    <div class="stat-card stat-teal"><div class="stat-label">Total Records</div><div class="stat-value">${prospectsCache.length + customersCache.length}</div><div class="stat-sub">Contacts tracked</div></div>
+  `;
+
+  const recentNotes = notes.slice(0, 8);
+  document.getElementById('dash-activity').innerHTML = recentNotes.length
+    ? recentNotes.map(n => `
+      <div style="display:flex;align-items:flex-start;gap:10px;padding:10px 16px;border-bottom:1px solid var(--gray-100);">
+        <div class="avatar" style="background:${avatarColor(n.company)};width:32px;height:32px;font-size:12px;">${initials(n.company)}</div>
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:13px;font-weight:600;">${esc(n.company)}</div>
+          <div style="font-size:12px;color:var(--gray-500);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${esc((n.note||'').slice(0,60))}${(n.note||'').length>60?'…':''}</div>
+        </div>
+        <div style="font-size:11px;color:var(--gray-400);flex-shrink:0;">${fmtDate(n.date)}</div>
+      </div>`)
+    .join('')
+    : '<div class="empty-state" style="padding:32px;"><div class="empty-icon" style="font-size:32px;">📋</div><p>No activity yet</p></div>';
+
+  const openTickets = ticketsCache.filter(t => !['Resolved','Closed'].includes(t.status)).slice(0,6);
+  document.getElementById('dash-tickets').innerHTML = openTickets.length
+    ? openTickets.map(t => `
+      <div style="display:flex;align-items:center;gap:10px;padding:10px 16px;border-bottom:1px solid var(--gray-100);">
+        <div style="width:10px;height:10px;border-radius:50%;background:${PRIORITY_COLOR[t.priority]};flex-shrink:0;"></div>
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${esc(t.subject)}</div>
+          <div style="font-size:12px;color:var(--gray-500);">${esc(t.customer_company||t.customer_name||'External')}</div>
+        </div>
+        ${badge(t.status)}
+      </div>`)
+    .join('')
+    : '<div class="empty-state" style="padding:32px;"><div class="empty-icon" style="font-size:32px;">✅</div><p>No open tickets!</p></div>';
+}
+
+// ============================================================
+//  PROSPECTS
+// ============================================================
+async function loadProspectsData() {
+  prospectsCache = await api('GET', '/api/prospects') || [];
+  updateBadges();
+}
+async function loadProspects() {
+  await loadProspectsData();
+  renderProspects();
+}
+
+function openAddProspect() {
+  document.getElementById('modal-prospect-title').textContent = 'Add Prospect';
+  document.getElementById('prospect-id').value = '';
+  ['p-company','p-contact','p-email','p-phone','p-value','p-industry','p-notes'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('p-status').value = 'New Lead';
+  openModal('modal-prospect');
+}
+
+function editProspect(id) {
+  const p = prospectsCache.find(x => x.id === id);
+  if (!p) return;
+  document.getElementById('modal-prospect-title').textContent = 'Edit Prospect';
+  document.getElementById('prospect-id').value = p.id;
+  document.getElementById('p-company').value = p.company || '';
+  document.getElementById('p-contact').value = p.contact || '';
+  document.getElementById('p-email').value = p.email || '';
+  document.getElementById('p-phone').value = p.phone || '';
+  document.getElementById('p-status').value = p.status || 'New Lead';
+  document.getElementById('p-value').value = p.value || '';
+  document.getElementById('p-industry').value = p.industry || '';
+  document.getElementById('p-notes').value = '';
+  openModal('modal-prospect');
+}
+
+async function saveProspect() {
+  const company = document.getElementById('p-company').value.trim();
+  const contact = document.getElementById('p-contact').value.trim();
+  if (!company || !contact) { toast('Company and contact name required.', 'error'); return; }
+  const id = document.getElementById('prospect-id').value;
+  const data = {
+    company, contact,
+    email: document.getElementById('p-email').value.trim(),
+    phone: document.getElementById('p-phone').value.trim(),
+    status: document.getElementById('p-status').value,
+    value: document.getElementById('p-value').value.trim(),
+    industry: document.getElementById('p-industry').value.trim(),
+    initialNote: document.getElementById('p-notes').value.trim()
+  };
+  try {
+    if (id) await api('PUT', '/api/prospects/' + id, data);
+    else await api('POST', '/api/prospects', data);
+    closeModal('modal-prospect');
+    toast(id ? 'Prospect updated!' : 'Prospect added!', 'success');
+    await loadProspects();
+  } catch (err) { toast(err.message, 'error'); }
+}
+
+async function deleteProspect(id) {
+  const p = prospectsCache.find(x => x.id === id);
+  if (!p) return;
+  document.getElementById('confirm-msg').textContent = `Delete prospect "${p.company}"? All associated notes will also be removed.`;
+  document.getElementById('confirm-btn').onclick = async () => {
+    try {
+      await api('DELETE', '/api/prospects/' + id);
+      closeModal('modal-confirm');
+      toast('Prospect deleted.', 'success');
+      await loadProspects();
+    } catch (err) { toast(err.message, 'error'); }
+  };
+  openModal('modal-confirm');
+}
+
+async function convertToCustomer(id) {
+  const p = prospectsCache.find(x => x.id === id);
+  if (!p) return;
+  document.getElementById('confirm-msg').textContent = `Convert "${p.company}" to a Current Customer?`;
+  document.getElementById('confirm-btn').textContent = 'Convert';
+  document.getElementById('confirm-btn').onclick = async () => {
+    try {
+      await api('POST', '/api/prospects/' + id + '/convert');
+      closeModal('modal-confirm');
+      toast(`"${p.company}" converted to customer!`, 'success');
+      await loadProspects();
+      await loadCustomersData();
+    } catch (err) { toast(err.message, 'error'); }
+  };
+  openModal('modal-confirm');
+}
+
+function renderProspects() {
+  const q = (document.getElementById('prospect-search').value || '').toLowerCase();
+  const sf = document.getElementById('prospect-status-filter').value;
+  let list = prospectsCache.filter(p => {
+    const match = !q || [p.company, p.contact, p.email, p.industry].join(' ').toLowerCase().includes(q);
+    return match && (!sf || p.status === sf);
+  });
+  const grid = document.getElementById('prospect-grid');
+  if (!list.length) {
+    grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1"><div class="empty-icon">🎯</div><h3>No prospects found</h3><p>Add your first prospect or import a CSV.</p></div>`;
+    return;
+  }
+  grid.innerHTML = list.map(p => `
+    <div class="customer-card">
+      <div class="customer-card-header">
+        <div class="avatar" style="background:${avatarColor(p.company)}">${initials(p.company)}</div>
+        <div class="customer-card-info"><h4>${esc(p.company)}</h4><p>${esc(p.contact)}</p></div>
+        ${badge(p.status)}
+      </div>
+      <div class="customer-card-body">
+        <div class="customer-card-meta">
+          ${p.email ? `<span>📧 <strong>${esc(p.email)}</strong></span>` : ''}
+          ${p.phone ? `<span>📞 <strong>${esc(p.phone)}</strong></span>` : ''}
+          ${p.value ? `<span>💰 <strong>${esc(p.value)}</strong></span>` : ''}
+          ${p.industry ? `<span>🏭 <strong>${esc(p.industry)}</strong></span>` : ''}
+          <span>📝 <strong>${p.note_count||0} note${p.note_count!==1?'s':''}</strong></span>
+          <span>📅 Added <strong>${fmtDate(p.created_at)}</strong></span>
+        </div>
+      </div>
+      <div class="customer-card-footer">
+        <button class="btn btn-ghost btn-sm" onclick="viewContact('prospect','${p.id}')">📋 View / Notes</button>
+        <button class="btn btn-ghost btn-sm" onclick="editProspect('${p.id}')">✏️ Edit</button>
+        <button class="btn btn-success btn-sm" onclick="convertToCustomer('${p.id}')">✅ Convert</button>
+        <button class="btn btn-danger btn-sm btn-icon" onclick="deleteProspect('${p.id}')">🗑</button>
+      </div>
+    </div>`).join('');
+}
+
+// ============================================================
+//  CUSTOMERS
+// ============================================================
+async function loadCustomersData() {
+  customersCache = await api('GET', '/api/customers') || [];
+  updateBadges();
+}
+async function loadCustomers() {
+  await loadCustomersData();
+  renderCustomers();
+}
+
+function openAddCustomer() {
+  document.getElementById('modal-customer-title').textContent = 'Add Customer';
+  document.getElementById('customer-id').value = '';
+  ['c-company','c-contact','c-email','c-phone','c-value','c-industry','c-notes'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('c-tier').value = 'Starter';
+  document.getElementById('c-start').value = today();
+  openModal('modal-customer');
+}
+
+function editCustomer(id) {
+  const c = customersCache.find(x => x.id === id);
+  if (!c) return;
+  document.getElementById('modal-customer-title').textContent = 'Edit Customer';
+  document.getElementById('customer-id').value = c.id;
+  document.getElementById('c-company').value = c.company || '';
+  document.getElementById('c-contact').value = c.contact || '';
+  document.getElementById('c-email').value = c.email || '';
+  document.getElementById('c-phone').value = c.phone || '';
+  document.getElementById('c-tier').value = c.tier || 'Starter';
+  document.getElementById('c-value').value = c.value || '';
+  document.getElementById('c-start').value = c.start_date || '';
+  document.getElementById('c-industry').value = c.industry || '';
+  document.getElementById('c-notes').value = '';
+  openModal('modal-customer');
+}
+
+async function saveCustomer() {
+  const company = document.getElementById('c-company').value.trim();
+  const contact = document.getElementById('c-contact').value.trim();
+  if (!company || !contact) { toast('Company and contact name required.', 'error'); return; }
+  const id = document.getElementById('customer-id').value;
+  const data = {
+    company, contact,
+    email: document.getElementById('c-email').value.trim(),
+    phone: document.getElementById('c-phone').value.trim(),
+    tier: document.getElementById('c-tier').value,
+    value: document.getElementById('c-value').value.trim(),
+    start_date: document.getElementById('c-start').value,
+    industry: document.getElementById('c-industry').value.trim(),
+    initialNote: document.getElementById('c-notes').value.trim()
+  };
+  try {
+    if (id) await api('PUT', '/api/customers/' + id, data);
+    else await api('POST', '/api/customers', data);
+    closeModal('modal-customer');
+    toast(id ? 'Customer updated!' : 'Customer added!', 'success');
+    await loadCustomers();
+  } catch (err) { toast(err.message, 'error'); }
+}
+
+async function deleteCustomer(id) {
+  const c = customersCache.find(x => x.id === id);
+  if (!c) return;
+  document.getElementById('confirm-msg').textContent = `Delete customer "${c.company}"? All notes and tickets will also be removed.`;
+  document.getElementById('confirm-btn').onclick = async () => {
+    try {
+      await api('DELETE', '/api/customers/' + id);
+      closeModal('modal-confirm');
+      toast('Customer deleted.', 'success');
+      await loadCustomers();
+    } catch (err) { toast(err.message, 'error'); }
+  };
+  openModal('modal-confirm');
+}
+
+function renderCustomers() {
+  const q = (document.getElementById('customer-search').value || '').toLowerCase();
+  const tf = document.getElementById('customer-tier-filter').value;
+  let list = customersCache.filter(c => {
+    const match = !q || [c.company, c.contact, c.email, c.industry].join(' ').toLowerCase().includes(q);
+    return match && (!tf || c.tier === tf);
+  });
+  const grid = document.getElementById('customer-grid');
+  if (!list.length) {
+    grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1"><div class="empty-icon">🏢</div><h3>No customers found</h3><p>Add your first customer or import a CSV.</p></div>`;
+    return;
+  }
+  grid.innerHTML = list.map(c => `
+    <div class="customer-card">
+      <div class="customer-card-header">
+        <div class="avatar" style="background:${avatarColor(c.company)}">${initials(c.company)}</div>
+        <div class="customer-card-info"><h4>${esc(c.company)}</h4><p>${esc(c.contact)}</p></div>
+        ${badge(c.tier)}
+      </div>
+      <div class="customer-card-body">
+        <div class="customer-card-meta">
+          ${c.email ? `<span>📧 <strong>${esc(c.email)}</strong></span>` : ''}
+          ${c.phone ? `<span>📞 <strong>${esc(c.phone)}</strong></span>` : ''}
+          ${c.value ? `<span>💰 <strong>${esc(c.value)}</strong></span>` : ''}
+          ${c.industry ? `<span>🏭 <strong>${esc(c.industry)}</strong></span>` : ''}
+          <span>📝 <strong>${c.note_count||0} note${c.note_count!==1?'s':''}</strong></span>
+          ${c.open_tickets>0 ? `<span>🎫 <strong style="color:var(--warning)">${c.open_tickets} open ticket${c.open_tickets!==1?'s':''}</strong></span>` : ''}
+          ${c.start_date ? `<span>📅 Since <strong>${fmtDate(c.start_date)}</strong></span>` : ''}
+        </div>
+      </div>
+      <div class="customer-card-footer">
+        <button class="btn btn-ghost btn-sm" onclick="viewContact('customer','${c.id}')">📋 View / Notes</button>
+        <button class="btn btn-ghost btn-sm" onclick="editCustomer('${c.id}')">✏️ Edit</button>
+        <button class="btn btn-primary btn-sm" onclick="openTicketForCustomer('${c.id}')">🎫 Ticket</button>
+        <button class="btn btn-danger btn-sm btn-icon" onclick="deleteCustomer('${c.id}')">🗑</button>
+      </div>
+    </div>`).join('');
+}
+
+// ============================================================
+//  CSV IMPORT / EXPORT
+// ============================================================
+function openImport(type) {
+  document.getElementById('import-type').value = type;
+  document.getElementById('modal-import-title').textContent = `📥 Import ${type === 'prospect' ? 'Prospects' : 'Customers'} CSV`;
+  document.getElementById('import-result').style.display = 'none';
+  document.getElementById('csv-file').value = '';
+  openModal('modal-import');
+}
+
+async function handleCsvFile(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const type = document.getElementById('import-type').value;
+  const formData = new FormData();
+  formData.append('file', file);
+  const resultEl = document.getElementById('import-result');
+  resultEl.style.display = 'block';
+  resultEl.className = 'import-result';
+  resultEl.textContent = 'Importing...';
+  try {
+    const endpoint = type === 'prospect' ? '/api/prospects/import/csv' : '/api/customers/import/csv';
+    const res = await api('POST', endpoint, formData, true);
+    resultEl.className = 'import-result success';
+    resultEl.innerHTML = `✅ <strong>Import complete!</strong> ${res.imported} imported, ${res.skipped} skipped out of ${res.total} rows.${res.errors.length ? '<br><small>' + res.errors.slice(0,3).join('<br>') + '</small>' : ''}`;
+    if (type === 'prospect') await loadProspects();
+    else await loadCustomers();
+    toast(`${res.imported} records imported!`, 'success');
+  } catch (err) {
+    resultEl.className = 'import-result error';
+    resultEl.textContent = '❌ ' + err.message;
+  }
+}
+
+function exportCsv(type) {
+  const endpoint = type === 'prospects' ? '/api/prospects/export/csv' : '/api/customers/export/csv';
+  const a = document.createElement('a');
+  a.href = endpoint + '?token=' + token;
+  // Use fetch with auth header instead
+  fetch(endpoint, { headers: { 'Authorization': 'Bearer ' + token } })
+    .then(r => r.blob())
+    .then(blob => {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = type + '.csv';
+      a.click();
+      URL.revokeObjectURL(url);
+      toast('CSV exported!', 'success');
+    }).catch(() => toast('Export failed.', 'error'));
+}
+
+// ============================================================
+//  NOTES
+// ============================================================
+function openAddNote(entityType, entityId) {
+  document.getElementById('note-entity-type').value = entityType;
+  document.getElementById('note-entity-id').value = entityId;
+  document.getElementById('note-type').value = '📞 Phone Call';
+  document.getElementById('note-date').value = today();
+  document.getElementById('note-text').value = '';
+  openModal('modal-note');
+}
+
+async function saveNote() {
+  const text = document.getElementById('note-text').value.trim();
+  if (!text) { toast('Please enter a note.', 'error'); return; }
+  const entityType = document.getElementById('note-entity-type').value;
+  const entityId = document.getElementById('note-entity-id').value;
+  const data = {
+    type: document.getElementById('note-type').value,
+    date: document.getElementById('note-date').value,
+    text
+  };
+  try {
+    const endpoint = entityType === 'prospect' ? `/api/prospects/${entityId}/notes` : `/api/customers/${entityId}/notes`;
+    await api('POST', endpoint, data);
+    closeModal('modal-note');
+    toast('Note added!', 'success');
+    viewContact(entityType, entityId);
+  } catch (err) { toast(err.message, 'error'); }
+}
+
+async function deleteNote(entityType, entityId, noteId) {
+  try {
+    const endpoint = entityType === 'prospect' ? `/api/prospects/${entityId}/notes/${noteId}` : `/api/customers/${entityId}/notes/${noteId}`;
+    await api('DELETE', endpoint);
+    toast('Note deleted.', 'success');
+    viewContact(entityType, entityId);
+  } catch (err) { toast(err.message, 'error'); }
+}
+
+// ============================================================
+//  VIEW CONTACT
+// ============================================================
+async function viewContact(entityType, entityId) {
+  try {
+    const endpoint = entityType === 'prospect' ? `/api/prospects/${entityId}` : `/api/customers/${entityId}`;
+    const entity = await api('GET', endpoint);
+    if (!entity) return;
+    const isProspect = entityType === 'prospect';
+    const notes = entity.notes || [];
+    const tickets = entity.tickets || [];
+
+    document.getElementById('modal-view-title').textContent = `${entity.company} — ${entity.contact}`;
+
+    const notesHtml = notes.length
+      ? notes.map(n => `
+        <div class="note-item">
+          <div class="note-meta">
+            <span>${esc(n.type)}</span>
+            <span class="note-date">📅 ${fmtDate(n.date)}</span>
+            ${n.created_by ? `<span class="note-by">by ${esc(n.created_by)}</span>` : ''}
+          </div>
+          <div class="note-text">${esc(n.text)}</div>
+          <button class="note-delete" onclick="deleteNote('${entityType}','${entityId}','${n.id}')">✕</button>
+        </div>`).join('')
+      : '<div class="no-notes">No notes yet. Add your first contact note!</div>';
+
+    const ticketsHtml = !isProspect && tickets.length
+      ? tickets.map(t => `
+        <div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--gray-100);">
+          <span style="width:10px;height:10px;border-radius:50%;background:${PRIORITY_COLOR[t.priority]};flex-shrink:0;display:inline-block;"></span>
+          <span style="flex:1;font-size:13px;">${esc(t.subject)}</span>
+          ${badge(t.status)}
+        </div>`).join('')
+      : (!isProspect ? '<p class="text-muted" style="padding:8px 0;">No tickets for this customer.</p>' : '');
+
+    const body = document.getElementById('modal-view-body');
+    body.innerHTML = `
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">
+        ${entity.email ? `<div><span class="text-muted">Email</span><div style="font-size:13.5px;font-weight:500;">${esc(entity.email)}</div></div>` : ''}
+        ${entity.phone ? `<div><span class="text-muted">Phone</span><div style="font-size:13.5px;font-weight:500;">${esc(entity.phone)}</div></div>` : ''}
+        ${entity.value ? `<div><span class="text-muted">${isProspect?'Potential Value':'Contract Value'}</span><div style="font-size:13.5px;font-weight:500;">${esc(entity.value)}</div></div>` : ''}
+        ${entity.industry ? `<div><span class="text-muted">Industry</span><div style="font-size:13.5px;font-weight:500;">${esc(entity.industry)}</div></div>` : ''}
+        <div><span class="text-muted">Status</span><div style="margin-top:3px;">${badge(isProspect?entity.status:entity.tier)}</div></div>
+      </div>
+      ${!isProspect ? `<div style="margin-bottom:16px;"><div style="font-size:12px;font-weight:600;color:var(--gray-500);text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px;">Tickets</div>${ticketsHtml}</div>` : ''}
+      <hr class="divider">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+        <div style="font-size:13px;font-weight:600;color:var(--gray-700);">📝 Contact Notes (${notes.length})</div>
+        <button class="btn btn-primary btn-sm" onclick="openAddNote('${entityType}','${entityId}')">＋ Add Note</button>
+      </div>
+      <div class="notes-list">${notesHtml}</div>
+    `;
+    openModal('modal-view');
+  } catch (err) { toast(err.message, 'error'); }
+}
+
+// ============================================================
+//  TICKETS
+// ============================================================
+async function loadTicketsData() {
+  ticketsCache = await api('GET', '/api/tickets') || [];
+  updateBadges();
+}
+async function loadTickets() {
+  await loadTicketsData();
+  renderTickets();
+}
+
+async function populateCustomerSelect(selectId, selectedId) {
+  const sel = document.getElementById(selectId);
+  const customers = customersCache.length ? customersCache : (await api('GET', '/api/customers') || []);
+  sel.innerHTML = customers.length
+    ? customers.map(c => `<option value="${c.id}" ${c.id===selectedId?'selected':''}>${esc(c.company)}</option>`).join('')
+    : '<option value="">No customers yet</option>';
+}
+
+async function openAddTicket() {
+  document.getElementById('modal-ticket-title').textContent = 'New Support Ticket';
+  document.getElementById('ticket-id').value = '';
+  await populateCustomerSelect('t-customer', '');
+  document.getElementById('t-priority').value = 'Medium';
+  document.getElementById('t-subject').value = '';
+  document.getElementById('t-category').value = 'Network Issue';
+  document.getElementById('t-desc').value = '';
+  openModal('modal-ticket');
+}
+
+async function openTicketForCustomer(customerId) {
+  await openAddTicket();
+  await populateCustomerSelect('t-customer', customerId);
+}
+
+async function saveTicket() {
+  const subject = document.getElementById('t-subject').value.trim();
+  const customer_id = document.getElementById('t-customer').value;
+  if (!subject) { toast('Please enter a subject.', 'error'); return; }
+  if (!customer_id) { toast('Please select a customer.', 'error'); return; }
+  const data = {
+    customer_id, subject,
+    priority: document.getElementById('t-priority').value,
+    category: document.getElementById('t-category').value,
+    description: document.getElementById('t-desc').value.trim()
+  };
+  try {
+    await api('POST', '/api/tickets', data);
+    closeModal('modal-ticket');
+    toast('Ticket created!', 'success');
+    await loadTickets();
+  } catch (err) { toast(err.message, 'error'); }
+}
+
+function openTicketUpdate(ticketId) {
+  const t = ticketsCache.find(x => x.id === ticketId);
+  if (!t) return;
+  document.getElementById('tu-ticket-id').value = ticketId;
+  document.getElementById('tu-status').value = t.status;
+  document.getElementById('tu-assigned').value = t.assigned_to || '';
+  document.getElementById('tu-note').value = '';
+  openModal('modal-ticket-update');
+}
+
+async function saveTicketUpdate() {
+  const note = document.getElementById('tu-note').value.trim();
+  if (!note) { toast('Please enter an update note.', 'error'); return; }
+  const ticketId = document.getElementById('tu-ticket-id').value;
+  const data = {
+    status: document.getElementById('tu-status').value,
+    assigned_to: document.getElementById('tu-assigned').value.trim(),
+    note
+  };
+  try {
+    await api('POST', `/api/tickets/${ticketId}/updates`, data);
+    closeModal('modal-ticket-update');
+    toast('Update posted!', 'success');
+    await loadTickets();
+  } catch (err) { toast(err.message, 'error'); }
+}
+
+async function deleteTicket(id) {
+  const t = ticketsCache.find(x => x.id === id);
+  if (!t) return;
+  document.getElementById('confirm-msg').textContent = `Delete ticket "${t.subject}"? This cannot be undone.`;
+  document.getElementById('confirm-btn').onclick = async () => {
+    try {
+      await api('DELETE', '/api/tickets/' + id);
+      closeModal('modal-confirm');
+      toast('Ticket deleted.', 'success');
+      await loadTickets();
+    } catch (err) { toast(err.message, 'error'); }
+  };
+  openModal('modal-confirm');
+}
+
+function toggleTicket(id) {
+  document.getElementById('ticket-body-' + id)?.classList.toggle('open');
+}
+
+function renderTickets() {
+  const q = (document.getElementById('ticket-search').value || '').toLowerCase();
+  const sf = document.getElementById('ticket-status-filter').value;
+  const pf = document.getElementById('ticket-priority-filter').value;
+  let list = ticketsCache.filter(t => {
+    const match = !q || [t.subject, t.description, t.category, t.customer_company, t.customer_name].join(' ').toLowerCase().includes(q);
+    return match && (!sf || t.status === sf) && (!pf || t.priority === pf);
+  });
+  const container = document.getElementById('ticket-list');
+  if (!list.length) {
+    container.innerHTML = `<div class="empty-state"><div class="empty-icon">🎫</div><h3>No tickets found</h3><p>Create a new ticket to get started.</p></div>`;
+    return;
+  }
+  const progressMap = { 'Open':10,'In Progress':40,'Waiting on Customer':60,'Resolved':90,'Closed':100 };
+  const progressColor = { 'Open':'var(--primary)','In Progress':'var(--warning)','Waiting on Customer':'var(--gray-400)','Resolved':'var(--success)','Closed':'var(--gray-400)' };
+  container.innerHTML = list.map(t => {
+    const custName = t.customer_company || t.customer_name || 'External';
+    const updates = t.updates || [];
+    const progress = progressMap[t.status] || 0;
+    const isExternal = t.source === 'external';
+    return `
+    <div class="ticket-item">
+      <div class="ticket-item-header" onclick="toggleTicket('${t.id}')">
+        <div class="ticket-priority-dot" style="background:${PRIORITY_COLOR[t.priority]}"></div>
+        <div class="ticket-item-info">
+          <h4>${esc(t.subject)} ${isExternal ? '<span class="source-badge">🌐 External</span>' : '<span class="source-badge internal">Internal</span>'}</h4>
+          <p>${esc(custName)} · ${esc(t.category)} · ${fmtDate(t.created_at)}${t.assigned_to ? ' · ' + esc(t.assigned_to) : ''}</p>
+        </div>
+        <div class="ticket-item-meta">${badge(t.priority)}${badge(t.status)}<span style="color:var(--gray-400);font-size:18px;">▾</span></div>
+      </div>
+      <div class="ticket-body" id="ticket-body-${t.id}">
+        <div style="margin-bottom:12px;">
+          <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+            <span style="font-size:11px;color:var(--gray-500);font-weight:600;">PROGRESS</span>
+            <span style="font-size:11px;color:var(--gray-500);">${progress}%</span>
+          </div>
+          <div class="progress-wrap"><div class="progress-bar" style="width:${progress}%;background:${progressColor[t.status]};"></div></div>
+        </div>
+        ${t.description ? `<div class="ticket-desc">${esc(t.description)}</div>` : ''}
+        ${isExternal && t.customer_email ? `<div style="font-size:12px;color:var(--gray-500);margin-bottom:10px;">📧 ${esc(t.customer_email)}${t.customer_phone ? ' · 📞 ' + esc(t.customer_phone) : ''}</div>` : ''}
+        ${updates.length ? `
+          <div style="font-size:12px;font-weight:600;color:var(--gray-500);text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px;">Update History</div>
+          <div class="ticket-updates">
+            ${updates.map(u => `
+              <div class="ticket-update">
+                <div class="update-meta">${fmtDate(u.created_at)} · ${esc(u.status)}${u.assigned_to ? ' · ' + esc(u.assigned_to) : ''}${u.created_by ? ' · by ' + esc(u.created_by) : ''}</div>
+                <div class="update-text">${esc(u.note)}</div>
+              </div>`).join('')}
+          </div>` : ''}
+        <div class="ticket-actions-row">
+          <button class="btn btn-primary btn-sm" onclick="openTicketUpdate('${t.id}')">🔄 Post Update</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteTicket('${t.id}')">🗑 Delete</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ============================================================
+//  SEARCH
+// ============================================================
+let searchTimeout;
+function runSearch() {
+  clearTimeout(searchTimeout);
+  searchTimeout = setTimeout(doSearch, 300);
+}
+
+async function doSearch() {
+  const q = (document.getElementById('global-search').value || '').trim();
+  const container = document.getElementById('search-results');
+  if (q.length < 2) {
+    container.innerHTML = `<div class="search-empty"><div class="search-empty-icon">🔍</div><p>Type at least 2 characters to search.</p></div>`;
+    return;
+  }
+  const types = [];
+  if (document.getElementById('sf-prospects').checked) types.push('prospects');
+  if (document.getElementById('sf-customers').checked) types.push('customers');
+  if (document.getElementById('sf-tickets').checked) types.push('tickets');
+  try {
+    const results = await api('GET', `/api/search?q=${encodeURIComponent(q)}&types=${types.join(',')}`) || [];
+    if (!results.length) {
+      container.innerHTML = `<div class="search-empty"><div class="search-empty-icon">😕</div><p>No results for "<strong>${esc(q)}</strong>"</p></div>`;
+      return;
+    }
+    container.innerHTML = `<p style="font-size:12px;color:var(--gray-400);margin-bottom:12px;">${results.length} result${results.length!==1?'s':''} for "<strong>${esc(q)}</strong>"</p>` +
+      results.map(r => `
+        <div class="search-result-item">
+          <div class="sr-header">
+            <span class="badge ${r.type.includes('Prospect')?'badge-blue':r.type.includes('Ticket')?'badge-orange':'badge-green'}">${esc(r.type)}</span>
+            <span class="sr-company">${highlight(r.company, q)}</span>
+            <span class="text-muted">·</span>
+            <span style="font-size:12px;color:var(--gray-500);">${esc(r.contact)}</span>
+            <span class="sr-date">${fmtDate(r.date)}</span>
+          </div>
+          <div class="sr-note">${highlight(r.note, q)}</div>
+          ${r.entityType !== 'ticket' ? `<div style="margin-top:8px;"><button class="btn btn-ghost btn-sm" onclick="viewContact('${r.entityType}','${r.entityId}')">View Details →</button></div>` : ''}
+        </div>`).join('');
+  } catch (err) { toast(err.message, 'error'); }
+}
+
+// ============================================================
+//  USERS (admin)
+// ============================================================
+async function loadUsers() {
+  try {
+    const users = await api('GET', '/api/auth/users') || [];
+    document.getElementById('users-tbody').innerHTML = users.map(u => `
+      <tr>
+        <td><strong>${esc(u.name)}</strong></td>
+        <td>${esc(u.email)}</td>
+        <td>${badge(u.role === 'admin' ? 'Enterprise' : 'Starter')}<span style="font-size:12px;margin-left:4px;">${esc(u.role)}</span></td>
+        <td>${u.active ? '<span class="badge badge-green">Active</span>' : '<span class="badge badge-red">Inactive</span>'}</td>
+        <td>${fmtDate(u.created_at)}</td>
+        <td class="table-actions">
+          <button class="btn btn-ghost btn-sm" onclick="editUser('${u.id}')">✏️ Edit</button>
+          ${u.id !== currentUser.id ? `<button class="btn btn-danger btn-sm" onclick="deactivateUser('${u.id}','${esc(u.name)}')">🚫</button>` : ''}
+        </td>
+      </tr>`).join('');
+  } catch (err) { toast(err.message, 'error'); }
+}
+
+function openAddUser() {
+  document.getElementById('modal-user-title').textContent = 'Add User';
+  document.getElementById('user-id').value = '';
+  ['u-name','u-email','u-password'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('u-role').value = 'technician';
+  document.getElementById('u-active').value = '1';
+  openModal('modal-user');
+}
+
+async function editUser(id) {
+  const users = await api('GET', '/api/auth/users') || [];
+  const u = users.find(x => x.id === id);
+  if (!u) return;
+  document.getElementById('modal-user-title').textContent = 'Edit User';
+  document.getElementById('user-id').value = u.id;
+  document.getElementById('u-name').value = u.name;
+  document.getElementById('u-email').value = u.email;
+  document.getElementById('u-password').value = '';
+  document.getElementById('u-role').value = u.role;
+  document.getElementById('u-active').value = u.active ? '1' : '0';
+  openModal('modal-user');
+}
+
+async function saveUser() {
+  const name = document.getElementById('u-name').value.trim();
+  const email = document.getElementById('u-email').value.trim();
+  const password = document.getElementById('u-password').value;
+  const id = document.getElementById('user-id').value;
+  if (!name || !email) { toast('Name and email required.', 'error'); return; }
+  if (!id && !password) { toast('Password required for new users.', 'error'); return; }
+  const data = { name, email, role: document.getElementById('u-role').value, active: document.getElementById('u-active').value === '1' };
+  if (password) data.password = password;
+  try {
+    if (id) await api('PUT', '/api/auth/users/' + id, data);
+    else await api('POST', '/api/auth/users', data);
+    closeModal('modal-user');
+    toast(id ? 'User updated!' : 'User created!', 'success');
+    await loadUsers();
+  } catch (err) { toast(err.message, 'error'); }
+}
+
+async function deactivateUser(id, name) {
+  document.getElementById('confirm-msg').textContent = `Deactivate user "${name}"? They will no longer be able to log in.`;
+  document.getElementById('confirm-btn').onclick = async () => {
+    try {
+      await api('DELETE', '/api/auth/users/' + id);
+      closeModal('modal-confirm');
+      toast('User deactivated.', 'success');
+      await loadUsers();
+    } catch (err) { toast(err.message, 'error'); }
+  };
+  openModal('modal-confirm');
+}
+
+// ============================================================
+//  SETTINGS — Change Password
+// ============================================================
+async function changePassword() {
+  const current = document.getElementById('cp-current').value;
+  const newPw = document.getElementById('cp-new').value;
+  const confirm = document.getElementById('cp-confirm').value;
+  if (!current || !newPw || !confirm) { toast('All fields required.', 'error'); return; }
+  if (newPw !== confirm) { toast('New passwords do not match.', 'error'); return; }
+  if (newPw.length < 6) { toast('Password must be at least 6 characters.', 'error'); return; }
+  try {
+    await api('POST', '/api/auth/change-password', { currentPassword: current, newPassword: newPw });
+    toast('Password updated successfully!', 'success');
+    ['cp-current','cp-new','cp-confirm'].forEach(id => document.getElementById(id).value = '');
+  } catch (err) { toast(err.message, 'error'); }
+}
+
+// Drag & drop for CSV
+const importZone = document.getElementById('import-zone');
+importZone.addEventListener('dragover', e => { e.preventDefault(); importZone.classList.add('drag-over'); });
+importZone.addEventListener('dragleave', () => importZone.classList.remove('drag-over'));
+importZone.addEventListener('drop', e => {
+  e.preventDefault();
+  importZone.classList.remove('drag-over');
+  const file = e.dataTransfer.files[0];
+  if (file) {
+    const dt = new DataTransfer();
+    dt.items.add(file);
+    document.getElementById('csv-file').files = dt.files;
+    handleCsvFile({ target: { files: [file] } });
+  }
+});
+</script>
+</body>
+</html>
